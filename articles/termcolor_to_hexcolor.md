@@ -8,7 +8,7 @@ published: false
 
 ターミナルで使われる256色と16進数の対応表が見つからなかったので作りました。
 
-使っているデータはmattnさんに教えてもらった[こちら](https://github.com/mattn/go-colorable/blob/e1bb79c8d53c38a60962ad4b8f658226cc983710/colorable_windows.go#L130-L387)のコードを使っています。
+使っているデータはmattnさんが教えてくださった[こちら](https://github.com/mattn/go-colorable/blob/e1bb79c8d53c38a60962ad4b8f658226cc983710/colorable_windows.go#L130-L387)のコードを使っています。
 
 
 - 0:   0x000000
