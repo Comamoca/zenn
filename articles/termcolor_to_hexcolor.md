@@ -1,6 +1,6 @@
 ---
 title: "TermColorと16進数(カラーコード)の互換表"
-emoji: "😊"
+emoji: "🎨"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["vim", "terminal", "color"]
 published: false
