@@ -3,7 +3,7 @@ title: "【こまもか流 】VimのQOLが上がるVim設定ファイル管理�
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [vim, 環境改善, QOL]
-published: false
+published: true
 ---
 
 こんにちは。こまもかです。今回はVimのQOLを上げる僕なりのVimの設定管理方法を紹介して行きたいと思います。
