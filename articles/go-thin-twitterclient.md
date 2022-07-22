@@ -40,9 +40,9 @@ thinの使い方はとてもシンプルです。覚える事はたった２つ�
 
 ```go
 keys := thin.ApiKeys{
-	ConsumerKey:       os.Getenv("CONSUMER_KEY"),
-	ConsumerSecret:    os.Getenv("CONSUMER_SECRET"),
-	AccessToken:       os.Getenv("ACCESS_TOKEN"),
+	ConsumerKey:			 os.Getenv("CONSUMER_KEY"),
+	ConsumerSecret:		 os.Getenv("CONSUMER_SECRET"),
+	AccessToken:			 os.Getenv("ACCESS_TOKEN"),
 	AccessTokenSecret: os.Getenv("ACCESS_TOKEN_SECRET"),
 }
 
@@ -85,41 +85,41 @@ import (
 func getTweets(jsn string) []string {
 	// 実際にツイート内容を取得する処理
 
-  // ツイート内容を格納するスライス
-  var txts []string
+	// ツイート内容を格納するスライス
+	var txts []string
 	for _, tweet := range gjson.Get(string(jsn), "statuses").Array() {
-    // ツイート内容をリストに追加
-    txts = append(txts, gjson.Get(tweet.String(), "text").String())
+		// ツイート内容をリストに追加
+		txts = append(txts, gjson.Get(tweet.String(), "text").String())
 	}
 
-  return txts
+	return txts
 }
 
 func main() {
-  // .envの読み込み
+	// .envの読み込み
 	godotenv.Load("../../.env")
 
-  
+	
 	keys := thin.ApiKeys{
-		ConsumerKey:       os.Getenv("CONSUMER_KEY"),
-		ConsumerSecret:    os.Getenv("CONSUMER_SECRET"),
-		AccessToken:       os.Getenv("ACCESS_TOKEN"),
+		ConsumerKey:			 os.Getenv("CONSUMER_KEY"),
+		ConsumerSecret:		 os.Getenv("CONSUMER_SECRET"),
+		AccessToken:			 os.Getenv("ACCESS_TOKEN"),
 		AccessTokenSecret: os.Getenv("ACCESS_TOKEN_SECRET"),
 	}
 
-  // Clientの作成
+	// Clientの作成
 	client := keys.Auth()
 
 	endp := "https://api.twitter.com/1.1/search/tweets.json?"
 	v := url.Values{}
 
-  // 検索するクエリの作成
+	// 検索するクエリの作成
 	v.Set("q", "#Twitter")
 
-  // URL生成用の構造体に代入
+	// URL生成用の構造体に代入
 	tu := thin.ThinUrl{RawUrl: endp, Value: v}
 
-  // 実際に叩くURLの生成
+	// 実際に叩くURLの生成
 	url, err := thin.GenerateUrl(tu)
 
 	if err != nil {
@@ -133,14 +133,14 @@ func main() {
 		fmt.Println(err)
 	}
 
-  // APIを叩く
-  twts := getTweets(resp)
+	// APIを叩く
+	twts := getTweets(resp)
 
-  // 結果の表示
-  for idx, twt := range twts {
-    fmt.Printf("%d: %s\n", idx, twt)
-    fmt.Println("-----------------------------------------")
-  }
+	// 結果の表示
+	for idx, twt := range twts {
+		fmt.Printf("%d: %s\n", idx, twt)
+		fmt.Println("-----------------------------------------")
+	}
 }
 ```
 
