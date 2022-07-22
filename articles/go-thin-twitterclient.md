@@ -40,9 +40,9 @@ thinの使い方はとてもシンプルです。覚える事はたった２つ�
 
 ```go
 keys := thin.ApiKeys{
-	ConsumerKey:			 os.Getenv("CONSUMER_KEY"),
-	ConsumerSecret:		 os.Getenv("CONSUMER_SECRET"),
-	AccessToken:			 os.Getenv("ACCESS_TOKEN"),
+	ConsumerKey: os.Getenv("CONSUMER_KEY"),
+	ConsumerSecret:	os.Getenv("CONSUMER_SECRET"),
+	AccessToken: os.Getenv("ACCESS_TOKEN"),
 	AccessTokenSecret: os.Getenv("ACCESS_TOKEN_SECRET"),
 }
 
