@@ -3,7 +3,7 @@ title: "【こまもか流】欲しい情報を見つけるGoogle検索"
 emoji: "🦊"
 type: "idea"
 topics: [google検索]
-published: false
+published: true
 ---
 
 こんにちは。こまもかです。
