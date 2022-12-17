@@ -1,10 +1,14 @@
 ---
-title: "簡単にMisskeyの認証が出来るライブラリを作った"
+title: "簡単にMisskeyの認証が出来るライブラリを作った話"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [misskey, deno]
-published: false
+published: true
 ---
+
+:::message
+この記事は[Miskeyアドベントカレンダー](https://adventar.org/calendars/7354)の18日目の記事です。
+:::
 
 こちらになります。
 
@@ -108,4 +112,10 @@ URLにアクセスするとこのような画面が表示されるので許可�
 
 ## 実装した感想とか
 
+今回初めてDenoとNode.jsのライブラリを作ってみました。
+dntはDenoの抜群の開発体験で両対応しているライブラリを作れるのでめちゃくちゃオススメです。
+ただ、内部でnpm importを用いたライブラリを使うことが出来ないので、その辺りは注意が必要です。(package.jsonが被るから...?)esm.shなどを用いる場合は問題なさそうです。
 
+実はsessionの実装中、npmのUUIDライブラリを使ったせいでビルドが通らずかなり焦りました...(Denoの組み込みAPIに目的のライブラリがあったのでたすかりました...)
+
+今後はmiauth.jsを使ってオレオレMisskeyクライアントを作ってみたいなぁなんて考えてます。それではまた次の記事で。
