@@ -3,7 +3,7 @@ title: "俺のVim2023"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [neovim, nvim, deinvim]
-published: false
+published: true
 publication_name: "ablaze"
 ---
 
