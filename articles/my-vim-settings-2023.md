@@ -4,6 +4,7 @@ emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [neovim, nvim, deinvim]
 published: false
+publication_name: "ablaze"
 ---
 
 どうもこまもかです。[^1]
