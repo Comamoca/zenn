@@ -1,5 +1,5 @@
 ---
-title: "俺のVim2023"
+title: "俺のNeovim2023"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [neovim, nvim, deinvim]
