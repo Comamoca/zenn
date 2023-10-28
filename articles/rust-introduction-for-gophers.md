@@ -3,7 +3,7 @@ title: "GoCLIツール職人のためのRust入門"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [go, rust, cli]
-published: false
+published: true
 ---
 
 三連休中にこんなツールを作った。
@@ -914,6 +914,12 @@ fn show_all(db: &sled::Db) {
 その時書いたコードは[sandbox](https://github.com/comamoca/sandbox/)リポジトリにpushしているので、手元で動かしてみたい人向けに対応表を置いておく。
 sandboxリポジトリはかなりコード量が多いので、ディレクトリ毎に[tiged](https://github.com/tiged/tiged)を使うなり、`sparse-checkout`なりを使って部分的にcloneするのがオススメ。
 
+追記(言い訳タイム):  
+あろうことかTUIについて解説するのを忘れてしまい、追加するまで下書き状態にしようと思っていたのだけど、いつ追加出来るか見通しが付かないので一旦公開してみる。
+
+TUIのサンプルには[Ratatui](https://github.com/ratatui-org/ratatui) [^6]を採用する予定。早いとこサンプルと解説を追加してしまいたい。
+
+
 |サンプルコード|対応する項目|
 |--------------|------------|
 |[rust-reqwest](https://github.com/Comamoca/sandbox/tree/main/rust-reqwest)|[HTTPクライアント](#httpクライアント)|
@@ -928,3 +934,4 @@ sandboxリポジトリはかなりコード量が多いので、ディレクト�
 [^3]: hyper自体はClientもServerも対応している。
 [^4]: `?`演算子を使えばもうちょいスッキリと書いていくことができるらしい。自分は`?`演算子を使うたびなぜかエラーが出るのでまるで使っていない。
 [^5]: FastAPIみたいに自動でドキュメントが生成できると期待していたのだけど結構自力で書く部分が多くてがっかりしてしまった...今後はマクロを使ってもっと簡略化できないか調べたい。
+[^6]: READMEにネズミらしきキャラクターが居るのだけど、どうやらディズニーの「レミーのおいしいレストラン」の原題がRatatuiと言うらしい。
