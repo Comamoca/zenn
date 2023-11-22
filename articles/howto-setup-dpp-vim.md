@@ -6,6 +6,10 @@ topics: ["neovim", "denops"]
 published: true
 ---
 
+:::details 変更履歴
+- 2023/11/22 dpp.vimのLuaモジュールについての解説を追加しました。また、サンプルコードに必要ないコードが入っていたため削除しました。
+:::
+
 :::message
 この記事は[このメモ書き](https://note.comamoca.dev/Vim/dpp.vim%E3%82%92Lua%E3%81%A7%E8%A8%AD%E5%AE%9A%E3%81%99%E3%82%8B)をZenn向けに清書したものです。
 更新がある場合はZennのこの記事を優先して更新します。
@@ -87,6 +91,59 @@ git clone https://github.com/vim-denops/denops.vim
 `touch ~/.config/nvim/dpp.ts`
 
 ## init.lua
+:::message
+dpp.vimにLuaモジュールが追加されたため、今後はこのモジュールを使うのが良さそうです。
+Luaモジュールを使うと従来`vim.fn["dpp#load_state"]()`と書いていた部分が`dpp.load_state()`のようにスッキリと書くことができます。
+以下は[ドキュメント](https://github.com/Shougo/dpp.vim/blob/8263bd31482fc251dea02dd3fecc72a453c4f941/doc/dpp.txt#L824)に書かれている設定例を使って自分が前の設定を書き換えたものです。
+また、従来の設定方法は折りたたみに残しておきます。
+:::
+
+```lua
+local dpp_src = "$HOME/.cache/dpp/repos/github.com/Shougo/dpp.vim"
+-- プラグイン内のLuaモジュールを読み込むため、先にruntimepathに追加する必要があります。
+vim.opt.runtimepath:prepend(dpp_src) 
+local dpp = require("dpp")
+
+local dpp_base = "~/.cache/dpp/"
+local dpp_config = "~/.config/nvim/dpp.ts"
+
+local denops_src = "$HOME/.cache/dpp/repos/github.com/vim-denops/denops.vim"
+
+local ext_toml = "$HOME/.cache/dpp/repos/github.com/Shougo/dpp-ext-toml"
+local ext_lazy = "$HOME/.cache/dpp/repos/github.com/Shougo/dpp-ext-lazy"
+local ext_installer = "$HOME/.cache/dpp/repos/github.com/Shougo/dpp-ext-installer"
+local ext_git = "$HOME/.cache/dpp/repos/github.com/Shougo/dpp-protocol-git"
+
+vim.opt.runtimepath:append(ext_toml)
+vim.opt.runtimepath:append(ext_git)
+vim.opt.runtimepath:append(ext_lazy)
+vim.opt.runtimepath:append(ext_installer)
+
+vim.g.denops_server_addr = "127.0.0.1:34141"
+vim.g["denops#debug"] = 1
+
+if dpp.load_state(dpp_base) then
+  vim.opt.runtimepath:prepend(denops_src)
+
+  vim.api.nvim_create_autocmd("User", {
+	  pattern = "DenopsReady",
+  	callback = function ()
+		vim.notify("vim load_state is failed")
+  		dpp.make_state(dpp_base, dpp_config)
+  	end
+  })
+end
+
+-- これはなくても大丈夫です。
+vim.api.nvim_create_autocmd("User", {
+	pattern = "Dpp:makeStatePost",
+	callback = function ()
+		vim.notify("dpp make_state() is done")
+	end
+})
+```
+
+:::details 従来の設定方法
 [READMEのConfig example](https://github.com/Shougo/dpp.vim#config-example)を参考に自分がLuaに書き直したものがこちらになります。
 ```lua
 local dpp_base = "~/.cache/dpp/"
@@ -110,8 +167,6 @@ vim.opt.runtimepath:append(ext_installer)
 if vim.fn["dpp#min#load_state"](dpp_base) then
 	vim.opt.runtimepath:prepend(denops_src)
 
-	vim.api.nvim_create_augroup("dpp", {})
-
 	vim.cmd(string.format("autocmd User DenopsReady call dpp#make_state('%s', '%s')", dpp_base, dpp_config))
 end
 
@@ -122,6 +177,8 @@ if vim.fn.has("syntax") then
 end
 ```
 autocmdを定義するところがかなり見苦しいけど、とりあえずこの設定で動きます。いつか直したい...
+
+:::
 
 ## TypeScript
 
