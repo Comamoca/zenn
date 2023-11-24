@@ -3,7 +3,8 @@ title: "【Elixir】behaviourとUseの考え方"
 emoji: "🦊" 
 type: "tech" # tech:技術記事 / idea: アイデア
 topics: ["elixir"]
-published: false
+published: true
+published_at: 2023-11-25 08:34
 ---
 
 ## Elixirのbehaviourを理解するのに手こずった
