@@ -189,7 +189,7 @@ Elixirにおいて最もポピュラーなbehaviourはPlugではないだろう�
 簡単に説明すると、Plugとは必要な関数を実装するだけでWebサーバを構築できるしくみ。
 これを使うことでシンプルにWebサーバを実装できる。
 
-ここでは先の説明を踏まえてcowboy_pugを使って簡単なWebサーバを構築してみる。
+ここでは先の説明を踏まえてcowboy_plugを使って簡単なWebサーバを構築してみる。
 
 まず始めにMixプロジェクトを作成する。
 
@@ -200,10 +200,24 @@ mix new sample
 以上で環境構築は完了したので、ここからは実際にWebサーバを実装していく。
 
 ```elixir
+defmodule Sample.Router do
+    use Plug.Router
+
+    plug :match
+    plug :dispatch
+
+    get "/" do
+        send_resp(conn, 200, "Hello world!")
+    end
+
+    match _ do
+        send_resp(conn, 404, "not found\n")
+    end
+end
 ```
 `iex -S mix`でiexを起動して以下のスクリプトを入力する。
 ```elixir
-{:ok, _} = Plug.Cowboy.http SamplePlug.Router, []
+{:ok, _} = Plug.Cowboy.http Sample.Router, []
 ```
 
 エラーがなければ`{:ok, #PID<0.268.0>}`のように表示される。もちろんPIDの値は実行するたびに変わる。
