@@ -7,7 +7,9 @@ published: true
 published_at: 2023-12-19 07:00
 ---
 
-この記事はVimアドベントカレンダーシリーズ2DAY日目の記事になります。
+この記事はVimアドベントカレンダーシリーズ2 19日目の記事になります。
+
+https://qiita.com/advent-calendar/2023/vim
 
 ## Fennelとは
 
