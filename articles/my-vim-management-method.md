@@ -19,22 +19,27 @@ published: true
 (僕はNeovimを使っているファイルのパスになっています。)
 
 ### Config
+
 ```vim
 command! Config :e $MYVIMRC
 ```
+
 `Config`コマンドはVimの設定ファイルを開くように設定したあります。
 設定ファイルのパスを`$MYVIMRC`にしてあるため、Vim/Neovimどちらでも使うことが出来ます。
 
 ### Configs
+
 ```vim
 command! Configs :call ddu#start({'sources': [{'name': 'file_rec', 'params': {'path': expand('~/.config/nvim/configs')}}]})
 ```
+
 `Configs`コマンドは各プラグインの設定ファイルが配置されている、`~/.config/nvim/confgis`ディレクトリを[ddu.vim](https://github.com/Shougo/ddu.vim)で開くようにしてあります。
 こうすることで、設定したいプラグインの名前を検索してすぐに設定を始めることが出来ます。
 
 このコマンドは[fzf.vim](https://github.com/junegunn/fzf.vim)や、[telescope.vim](https://github.com/nvim-telescope/telescope.nvim)などのプラグインでも代用可能です。
 
 ### ConfigsDefx
+
 ```vim
 command! ConfigsDefx :Defx ~/.config/nvim/configs
 ```
@@ -44,13 +49,16 @@ command! ConfigsDefx :Defx ~/.config/nvim/configs
 また、このコマンドも、[Fern.vim]()や、Netrwでも代用可能です。
 
 ### Source
+
 ```vim
 command! Source :source $MYVIMRC
 ```
+
 `Source`コマンドはVimの設定ファイルを再読み込みします。
 `$MYVIMRC`を使用しているのでVimでも使用可能です。
 
 ### ディレクトリ構造
+
 ```
 ├── configs
 │   ├── cmds.vim
@@ -85,6 +93,7 @@ command! Source :source $MYVIMRC
 ## 使い方
 
 設定のワークフロー
+
 ```mermaid
 graph TB
     A[Config プラグイン追加] -->B[ConfigsDefx 設定ファイル追加]
@@ -92,21 +101,19 @@ graph TB
 ```
 
 1. `Config`コマンドでプラグインを追加します。
-プラグインが追加出来れば良いので、dein.vimを使っている人などは`dein.toml`などを編集すればOKです。
+   プラグインが追加出来れば良いので、dein.vimを使っている人などは`dein.toml`などを編集すればOKです。
 
 2. ConfigDefxコマンドで設定ファイルを追加します。
-プラグインを追加した後はこのコマンドで`プラグイン名.vim`というファイルを追加・編集します。
+   プラグインを追加した後はこのコマンドで`プラグイン名.vim`というファイルを追加・編集します。
 
-3. Source 設定の適用
-設定を変更した後は`source`コマンドで適用します。
-僕は`source`コマンドを打つのが面倒なので自作の`Source`コマンドを使っています。
+3. Source 設定の適用 設定を変更した後は`source`コマンドで適用します。
+   僕は`source`コマンドを打つのが面倒なので自作の`Source`コマンドを使っています。
 
 4. 環境改善欲
-READMEなどに載っている設定例などを設定しても、デフォルトのキーバインドと衝突したり、使いずらかったりするので、必ず設定を変えたりしたいと思うはずです。
+   READMEなどに載っている設定例などを設定しても、デフォルトのキーバインドと衝突したり、使いずらかったりするので、必ず設定を変えたりしたいと思うはずです。
 
 5. Configs 設定の改善
-変更したいプラグインの設定ファイルを素早く見つける為にファジーファインダープラグインで該当のディレクトリを開くようにしておくと便利です。
-
+   変更したいプラグインの設定ファイルを素早く見つける為にファジーファインダープラグインで該当のディレクトリを開くようにしておくと便利です。
 
 ## まとめ
 
