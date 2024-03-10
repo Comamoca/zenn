@@ -12,7 +12,18 @@ https://gleam.run/news/gleam-version-1/
 
 そんな訳で、今後ますます成長していくであろうGleamと今海外でアツイらしいElixirを連携させる方法を紹介していきます。
 
-Gleamについてはこの[Gleam Language Tour](https://tour.gleam.run)が対話的になってて分かりやすいです。(英語ですが)
+Gleamについてはこの[Gleam Language Tour](https://tour.gleam.run)が対話的になってて分かりやすいです。
+
+3/10 追記:
+有志の方が日本語訳を公開してくださっているそうです。
+
+https://x.com/debiru_R/status/1766797187848278224?s=20
+
+Gleam Language Tour(日本語版)
+
+https://gleam.lavoscore.org
+
+
 日本語の情報が見たい人はここらへんを参照してください。
 
 https://zenn.dev/mzryuka/articles/start-gleam_playground
