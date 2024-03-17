@@ -1,0 +1,10 @@
+title: "入門Gleam"
+summary: "Gleamの入門書です。"
+topics: [gleam, erlang, elixir]
+published: false
+price: 0
+
+chapters:
+  - introduction
+  - what-is-gleam
+  - syntax
