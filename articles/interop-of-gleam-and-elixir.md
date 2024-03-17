@@ -1,5 +1,5 @@
 ---
-title: "GleamとElixirを相互に呼び出してみる"
+title: "ElixirプロジェクトでGleamとElixirを相互に呼び出してみる"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [gleam, elixir]
@@ -278,7 +278,7 @@ https://github.com/lpil/htmgrrrl
 
 https://x.com/Comamoca_/status/1766579872539779218?s=20
 
-https://github.com/Comamoca/sandbox/tree/main/ex_gleam_with_floki
+https://github.com/Comamoca/sandbox/tree/main/ex_mix_gleam_with_floki
 
 
 [^1]: なのでErlangの知識がある方はコードを書いた後`/build`ディレクトリを覗いてみると面白いです。デバッグにも役立ちます。
