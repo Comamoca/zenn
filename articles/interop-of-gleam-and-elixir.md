@@ -14,6 +14,13 @@ https://gleam.run/news/gleam-version-1/
 
 Gleamについてはこの[Gleam Language Tour](https://tour.gleam.run)が対話的になってて分かりやすいです。
 
+また、GleamプロジェクトからElixirライブラリを使う方法はこちらの記事を参照してください。
+
+https://zenn.dev/comamoca/articles/call-elixir-library-from-gleam-project
+
+
+:::details 追記や他の日本語の資料など
+
 3/10 追記:
 有志の方が日本語訳を公開してくださっているそうです。
 
@@ -29,6 +36,8 @@ https://gleam.lavoscore.org
 https://zenn.dev/mzryuka/articles/start-gleam_playground
 
 https://note.comamoca.dev/Gleam/%E9%80%86%E5%BC%95%E3%81%8DGleam.html#Elixir%E3%81%A8%E9%80%A3%E6%90%BA%E3%81%97%E3%81%9F%E3%81%84
+
+:::
 
 
 ## GleamとElixirを連携させる
