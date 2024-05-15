@@ -3,7 +3,7 @@ title: "Gleamのuseについて"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [gleam]
-published: false
+published: true
 ---
 
 今回はGleamのuseについて解説します。サンプルプログラムは[Comamoca/sandbox]()にて公開しています。
