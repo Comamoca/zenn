@@ -609,7 +609,7 @@ float.parse("arisu") // => Error(Nil)
 ```rust
 import float
 
-float.round(14.9) // => 14
+float.round(14.9) // => 15
 ```
 
 ### Float -> String
