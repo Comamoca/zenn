@@ -3,7 +3,7 @@ title: "GleamとJSON"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [gleam]
-published: json
+published: true
 ---
 
 今回はGleamでJSONをエンコード・デコードする方法を解説します。
