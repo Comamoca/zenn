@@ -131,7 +131,7 @@ https://www.erlang.org/doc/readme.html
 
 - プロセスを監視して自動的に再起動させたりできる`Supervisor`
 - 状態と振舞いを実装できる`GenServer`
-- 内蔵された堅牢がインメモリストア`Erlang Term Storage` 
+- 内蔵かつ堅牢なインメモリストア`Erlang Term Storage` 
 - 同じく内蔵された分散データベース`Mnesia`
 
 
@@ -609,7 +609,7 @@ float.parse("arisu") // => Error(Nil)
 ```rust
 import float
 
-float.round(14.9) // => 14.9
+float.round(14.9) // => 14
 ```
 
 ### Float -> String
@@ -653,7 +653,6 @@ bool.to_int(False) // => 0
 `type`キーワードで型を定義できます。型定義はモジュールのトップレベルに記述する必要があります。
 
 `let`や`const`、`fn`キーワードと同様に`pub`キーワードを使って外部に公開できます。
-`pub`
 
 Gleamの型定義はTypeScriptと違って、型の中にバリアントを含む構造をとっています。
 また、バリアントの要素は`.`でアクセスでき、バリアントそのものがコンストラクタになっています。
@@ -797,7 +796,7 @@ https://gleam.run/news/gleam-v0.13-released
 ```
 ## 比較
 
-比較に関してもTypeScript基本的に同じ演算子が使えます。
+比較に関しても基本的にTypeScriptと同じ演算子が使えます。
 四則演算子と同じように小数は専用の演算子が存在します。
 等号だけは例外で、全ての型で同じ演算子が使えます。
 
