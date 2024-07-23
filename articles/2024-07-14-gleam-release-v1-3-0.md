@@ -1,5 +1,5 @@
 ---
-title: "Gleam 1.3.0で開発体験が更に向上した話"
+title: "Gleam 1.3.0で開発体験が更に向上した"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [gleam]
