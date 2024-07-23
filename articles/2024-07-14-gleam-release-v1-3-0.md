@@ -3,7 +3,7 @@ title: "Gleam 1.3.0で開発体験が更に向上した話"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [gleam]
-published: false
+published: true
 ---
 
 Gleam 1.3.0がリリースされました。
