@@ -6,6 +6,7 @@ topics: [gleam]
 published: true
 ---
 
+
 Gleam 1.3.0がリリースされました。
 
 https://x.com/gleamlang/status/1810668807964537272
