@@ -27,6 +27,23 @@
         }:
         let
           stdenv = pkgs.stdenv;
+
+          textlintrc = (pkgs.formats.json { }).generate "textlintrc" {
+            filters = { };
+            rules = {
+              preset-ja-technical-writing = {
+                ja-no-weak-phrase = false;
+                ja-no-mixed-period = false;
+                no-exclamation-question-mark = false;
+              };
+              prh = {
+                rulePaths = [
+                  "${pkgs.textlint-rule-prh}/lib/node_modules/textlint-rule-prh/node_modules/prh/prh-rules/media/WEB+DB_PRESS.yml"
+                  "${pkgs.textlint-rule-prh}/lib/node_modules/textlint-rule-prh/node_modules/prh/prh-rules/media/techbooster.yml"
+                ];
+              };
+            };
+          };
         in
         rec {
           treefmt = {
@@ -40,11 +57,20 @@
 
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
-	      zenn-cli
-	      just
+              zenn-cli
+              just
+              (textlint.withPackages [
+                textlint-rule-preset-ja-technical-writing
+                textlint-rule-prh
+              ])
 
               nil
             ];
+
+            shellHook = ''
+              unlink .textlintrc
+              ln -s ${textlintrc} .textlintrc
+            '';
           };
         };
     };
