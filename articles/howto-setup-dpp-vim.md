@@ -8,6 +8,7 @@ published: true
 
 :::details 変更履歴
 - 2023/11/22 dpp.vimのLuaモジュールについての解説を追加しました。また、サンプルコードに必要ないコードが入っていたため削除しました。
+- 2024/11/1 Denopsの共有サーバについての解説がないという声をいただいたので、折り畳みで解説を追加。
 :::
 
 :::message
@@ -98,6 +99,21 @@ Luaモジュールを使うと従来`vim.fn["dpp#load_state"]()`と書いてい�
 また、従来の設定方法は折りたたみに残しておきます。
 :::
 
+2024/11/1追記
+Denopsの共有サーバについての解説がないという声をいただいたので、折り畳みで解説します。
+また、この設定は必要な時に有効化すれば良いためサンプルコード内の該当箇所をコメントアウトしました。
+:::details denopsの共有サーバについて
+denopsはそのアーキテクチャ上サーバを起動します。
+通常サーバの起動はVimの起動時に行われるため、denopsプラグインが使えるようになるのに時間がかかってしまいます。
+
+そこで、Vimとは別のプロセスでサーバを起動し、denopsプラグインが使えるようになるまでの時間を短くできるのが、
+共有サーバ(shared server)と呼ばれるものです。
+
+共有サーバのインストールにはこちらのプラグインが便利です。
+
+https://github.com/vim-denops/denops-shared-server.vim
+:::
+
 ```lua
 local dpp_src = "$HOME/.cache/dpp/repos/github.com/Shougo/dpp.vim"
 -- プラグイン内のLuaモジュールを読み込むため、先にruntimepathに追加する必要があります。
@@ -119,8 +135,12 @@ vim.opt.runtimepath:append(ext_git)
 vim.opt.runtimepath:append(ext_lazy)
 vim.opt.runtimepath:append(ext_installer)
 
-vim.g.denops_server_addr = "127.0.0.1:34141"
-vim.g["denops#debug"] = 1
+-- denops shared serverの設定
+-- vim.g.denops_server_addr = "127.0.0.1:34141"
+
+-- denopsのデバッグフラグ
+-- denopsプラグインの開発をしない場合は0(デフォルト)にしてください
+-- vim.g["denops#debug"] = 1
 
 if dpp.load_state(dpp_base) then
   vim.opt.runtimepath:prepend(denops_src)
