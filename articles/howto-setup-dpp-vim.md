@@ -9,6 +9,7 @@ published: true
 :::details 変更履歴
 - 2023/11/22 dpp.vimのLuaモジュールについての解説を追加しました。また、サンプルコードに必要ないコードが入っていたため削除しました。
 - 2024/11/1 Denopsの共有サーバについての解説がないという声をいただいたので、折り畳みで解説を追加。
+- 2024/11/22 dppをインストール後のruntimepathについて追記
 :::
 
 :::message
@@ -403,6 +404,14 @@ call dpp#async_ext_action('installer', 'install')
 call dpp#async_ext_action('installer', 'update')
 ```
 
+## 11/22追記 インストール後のruntimepathについて
+
+数ヵ月ほど前にdpp.vimのruntimepathについて質問されたのを思い出したので追記します。
+dpp.vimでは指定されたディレクトリ(本記事で紹介した方法なら`~/.cache/dpp`)にプラグインをインストールし、`call dpp#async_ext_action('installer', 'update')`が呼び出された際に配下のプラグインを更新します。
+
+もし最初に`git clone`したディレクトリと`dpp.load_state`等で指定した場所が異なっている場合は、最初にdppでdpp自身をインストールできた際にそれらの設定を切り替える必要があります。
+
+ですが、この記事で紹介した方法では初めから`dpp.load_state`で指定する想定のディレクトリである`~/.cache/dpp/repos`配下で`git clone`を行っているため、ただプラグインをアップデートするだけでdpp自身も更新されるはずです。
 
 ## 【おまけその1】プラグインの手動追加
 
