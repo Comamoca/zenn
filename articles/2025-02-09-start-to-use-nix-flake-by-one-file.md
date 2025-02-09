@@ -218,7 +218,7 @@ derivationの名前。必須。
 
 - buildInputs  
 **実行時に用いられる依存**を指定します。
-- nativebuildinputs  
+- nativeBuildInputs  
 **ビルド時に用いられる依存**を指定します。
 - buildPhase  
 ビルド時に実行されるbashスクリプト。
@@ -577,6 +577,11 @@ ripsecretsとgit-secretsによるクレデンシャルが含まれていない�
                 };
               };
             };
+          };
+
+          devShells.default = pkgs.mkShell {
+            inputsFrom = [ config.pre-commit.devShell ];
+            packages = [ pkgs.hello ];
           };
         };
     };
