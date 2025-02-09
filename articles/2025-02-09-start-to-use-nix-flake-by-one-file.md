@@ -3,7 +3,7 @@ title: "1ファイルから始めるNix Flake"
 emoji: "🦊"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nix"]
-published: false
+published: true
 ---
 
 ここ最近Nixに興味を持ってくれる方が増えている実感があります。
