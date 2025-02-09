@@ -401,7 +401,7 @@ default = stdenv.mkDerivation {
 
 flake partsを使った最小限のflakeは以下の通りです。
 systemsの指定として[nix-systems/default](https://github.com/nix-systems/default)を使用しています。
-これはあらかじめデフォルトで使われるプラットフォーム[^]が定義されているモジュールです。
+これはあらかじめデフォルトで使われるプラットフォーム[^5]が定義されているモジュールです。
 
 これを使用することでtypoによるミスを軽減でき、inputsを見るだけでどのプラットフォームに対応しているか分かるので可読性の向上が期待できます。
 
