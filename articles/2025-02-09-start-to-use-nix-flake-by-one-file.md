@@ -105,7 +105,7 @@ The program 'hello' is currently not installed. It is provided by
 ```
 
 :::message
-ちなみに、`nix build`した後`./result/bin`の実行ファイルを生成する操作は`nix run`と等価です。
+`nix run`というコマンドを使うと`nix build`で`./result`を作成せずとも直接実行できます。
 また`nix run .#mypkg`のようにdefualt以外のパッケージに対しても適用可能です。
 :::
 
@@ -217,7 +217,9 @@ derivationの名前。必須。
 #### ビルド時の定義
 
 - buildInputs  
-ビルド時に用いられる依存を指定。
+**実行時に用いられる依存**を指定します。
+- nativebuildinputs  
+**ビルド時に用いられる依存**を指定します。
 - buildPhase  
 ビルド時に実行されるbashスクリプト。
 主に実行ファイルを生成するのに用いる。
@@ -348,9 +350,9 @@ default = stdenv.mkDerivation {
 - 内部ではsystemsの値を参照でき、上記のサンプルでは`system`という名前を使っている
 - 内部で`system`の値を使ってパッケージセットを生成している
 
-という点を抑えれば読めるはずです。
+という点を押さえれば読めるはずです。
 
-サードパーティのNixライブラリを使用するとより簡潔に上記のような定義を行なえます。
+サードパーティのNixライブラリを使用するとより簡潔に上記のような定義を行えます。
 たとえばflake-utilsでは以下のように定義できます。
 
 ```nix
@@ -398,47 +400,49 @@ default = stdenv.mkDerivation {
 ### flake partsを導入する
 
 flake partsを使った最小限のflakeは以下の通りです。
+systemsの指定として[nix-systems/default](https://github.com/nix-systems/default)を使用しています。
+これはあらかじめデフォルトで使われるプラットフォーム[^]が定義されているモジュールです。
+
+これを使用することでtypoによるミスを軽減でき、inputsを見るだけでどのプラットフォームに対応しているか分かるので可読性の向上が期待できます。
 
 ```nix
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    services-flake.url = "github:juspay/services-flake";
     systems.url = "github:nix-systems/default";
   };
 
   outputs =
     inputs@{
       self,
-      systems,
       nixpkgs,
       flake-parts,
+      systems,
       ...
     }:
-    flake-parts.lib.mkFlake { inherit inputs; } { 	
-	
-	# systemsで全てのプラットフォームを列挙する手間を省いている。
-	# 従来のように文字列のリストを指定することも可能。
-	# systems = [ "x86_64-linux" ];
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = import systems;
 
-	systems = import systems;
-
-    perSystem = { config, pkgs, system, ... }: {
-      devShells = {
-        default = pkgs.mkShell {
-          packages = [ pkgs.hello ];
+      perSystem =
+        { config,
+          system,
+          pkgs,
+          ...
+        }: {
+          devShells = {
+            default = pkgs.mkShell {
+              packages = [ pkgs.hello ];
+            };
+            myshell = pkgs.mkShell {
+              packages = [ pkgs.cowsay ];
+            };
+          };
+          packages = {
+            default = pkgs.hello;
+          };
         };
-        myshell = pkgs.mkShell {
-          packages = [ pkgs.cowsay ];
-        };
-      };
-
-      packages = {
-        default = pkgs.hello;
-      };
     };
-  };
-
 }
 ```
 
@@ -511,7 +515,7 @@ pre-commit自体はPythonで書かれていますが、Nixだとそのあたり�
 https://comamoca.dev/blog/2024-11-11-flake-git-hooks/
 
 
-また、先述したtreefmtもgit-hooksに対応しているのでcommit前にtreefmt-nixによるフォーマットのチェックを行なえます。
+また、先述したtreefmtもgit-hooksに対応しているのでcommit前にtreefmt-nixによるフォーマットのチェックを行えます。
 
 :::details 使用例
 
@@ -710,3 +714,4 @@ Nixは汎用性が非常に高い技術ですので、ここで紹介できた�
 [^2]: ただNixにおけるビルドは従来のビルドツールが行っているビルドと違い、実行ファイルやバイナリを作らなくても成立する点は注意。
 [^3]: Nixにおいてパッケージの集合を指す言葉。
 [^4]: https://zenn.dev/asa1984/books/nix-hands-on/viewer/ch02-02-use-nixpkgs#%E3%83%A6%E3%83%BC%E3%83%86%E3%82%A3%E3%83%AA%E3%83%86%E3%82%A3%E9%96%A2%E6%95%B0%E3%81%AE%E8%87%AA%E4%BD%9C
+[^5]: aarch64-darwin, aarch64-linux, x86_64-darwin, x86_64-linux
