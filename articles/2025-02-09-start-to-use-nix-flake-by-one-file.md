@@ -705,8 +705,7 @@ Emacsなら[emacs-direnv](https://github.com/wbolster/emacs-direnv)を入れて�
 この記事ではNix Flakeを1ファイルから開発環境を構築するツールとして利用する方法を紹介してきました。
 Nixは汎用性が非常に高い技術ですので、ここで紹介できた内容も氷山の一角でしかありませんがそれでも日ごろの開発を改善していくには十分です。
 
-もしここに書かれている内容が物足りなくなってきたら、nixpkgsコミッターもいることで有名な[vim-jp Slack](https://vim-jp.org/docs/chat.html)の
-`#tech-nix`チャンネルを覗いてみてください。
+もしここに書かれている内容が物足りなくなってきたら、nixpkgsコミッターもいることで有名な[vim-jp Slack](https://vim-jp.org/docs/chat.html)の`#tech-nix`チャンネルを覗いてみてください。
 そこには毎日生活をNixで破壊しているNixの猛者がたくさんいるのできっと満足できるはずです。
 
 
