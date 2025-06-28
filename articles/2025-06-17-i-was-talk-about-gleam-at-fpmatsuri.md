@@ -3,7 +3,7 @@ title: "関数型まつりでGleamについて話しました"
 emoji: "🦊"
 type: "idea"
 topics: ["gleam"]
-published: false
+published: true
 ---
 
 https://fortee.jp/2025fp-matsuri/proposal/e9df1f36-cf2f-4a85-aa36-4e07ae742a69
