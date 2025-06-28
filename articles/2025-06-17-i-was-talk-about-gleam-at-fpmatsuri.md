@@ -242,7 +242,7 @@ Gleamで作成されたクエリビルダです。
 https://github.com/giacomocavalieri/squirrel
 
 SQLからGleamのコードを生成するパッケージです。
-Goの[sqlx](https://github.com/jmoiron/sqlx)をイメージしてもらえると分かりやすいです。
+Goの[sqlc](https://sqlc.dev/)をイメージしてもらえると分かりやすいです。
 
 PostgreSQLしか対応していない点は注意です。
 
