@@ -318,7 +318,7 @@ pub fn main() {
 
 ## 標準出力
 
-TypeScriptには`console.log`という関数が組込みで使えます。
+TypeScriptには`console.log`という関数があり、組込みで使えます。
 Gleamでは標準出力は`gleam/io`というライブラリで提供されてます。
 
 `gleam/io`ライブラリにある`io.debug`という関数は**あらゆる型を受け入れ標準出力する関数**で、デバッグする際非常に便利です。
