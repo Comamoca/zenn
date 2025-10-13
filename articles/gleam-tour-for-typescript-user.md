@@ -221,7 +221,7 @@ https://mise.jdx.dev/
 ## GleamとJavaScript
 
 GleamはES6に準拠したJavaScriptを出力します。
-また、Gleamは珍しくNode.jsやブラウザー以外にDenoとBunの実行もサポートしています。
+また、Gleamは珍しくNode.jsやブラウザー以外にDenoとBunでの実行もサポートしています。
 
 Denoに関しては設定ファイル`gleam.toml`にて実行時権限の指定が可能です。
 
@@ -292,7 +292,7 @@ Hello from sample!
 
 ## エントリポイント
 
-TypeScriptは基本的に言語側で決められたエントリポイントは存在しません。
+TypeScriptは基本的に言語側で決められたエントリポイントが存在しません。
 Gleamでは`gleam run`コマンドが実行されると`src/`配下にある`プロジェクト名.gleam`というファイルの`main`という関数が実行されます。
 
 また`gleam run -m tmp`のように、`-m`オプションを付けることで実行されるモジュールを指定できます。
