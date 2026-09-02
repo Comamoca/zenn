@@ -26,7 +26,10 @@ https://hexdocs.pm/gleam_json/
 
 これは公式がサポートしているライブラリなのでまずはこれを使ってみると良いでしょう。
 
-パーサーとしては公式ライブラリの他にjasperなどのライブラリがありますが、現時点(6/16)では標準ライブラリで`list.at`が削除された変更に追いつけておらず動きません。
+2026/09/02 更新:
+jasperは現在も動かない状態です。
+最新版の2.0.1は`gleam_stdlib`のバージョン制約が古いまま更新されておらず、現行のstdlibでは依存解決に失敗します。
+また代わりに解決される1.2.0も、依存先の`pears`が削除済みの`gleam/iterator`モジュールに依存しているためビルドが通りません。
 
 https://hexdocs.pm/jasper/
 
@@ -96,6 +99,9 @@ array([1, 2, 3], of: int)
 
 #### デコード
 
+2026/08/31 更新:
+現状のstdlibでは新しいAPIになっています。
+
 [エンコード](#エンコード)にあるJSONをデコードしてみます。
 
 まず事前にデコードしたいJSONと同じ構造をした型を用意します。
@@ -105,9 +111,6 @@ array([1, 2, 3], of: int)
 
 従って必要な箇所の構造のみ定義することで型定義のコストを最小限にできます。
 
-:::message
-このように**一旦値をDynamicにして`gleam/dynamic`の関数を用いて型を判別していく方法**はGleamが外部とやり取りする際によく使われます。
-:::
 
 ```rust
 pub type Idol {
@@ -119,25 +122,27 @@ pub type Favorites {
 }
 ```
 
-次に、`json.decode`を使ってJSONをデコードします。
+次に、`json.parse`を使ってJSONをデコードします。
 
 ```rust
-json.decode(
-  text, // JSONテキストデータ
-  dynamic.decode3(
-    Idol,
-    field(named: "name", of: string),
-    field(named: "age", of: int),
-    field( // 再帰的なフィールドはfieldの引数にfieldを指定すれば良い
-      named: "favorites",
-      of: dynamic.decode2(
-        Favorites,
-        field(named: "hobby", of: string),
-        field(named: "food", of: string),
-      ),
-    ),
-  ),
-)
+import gleam/dynamic/decode
+
+pub fn decode(text: String) {
+  let favorites_decoder = {
+    use hobby <- decode.field("hobby", decode.string)
+    use food <- decode.field("food", decode.string)
+    decode.success(Favorites(hobby: hobby, food: food))
+  }
+
+  let idol_decoder = {
+    use name <- decode.field("name", decode.string)
+    use age <- decode.field("age", decode.int)
+    use favorites <- decode.field("favorites", favorites_decoder)
+    decode.success(Idol(name: name, age: age, favorites: favorites))
+  }
+
+  json.parse(text, idol_decoder)
+}
 ```
 
 デコードされると`Ok(Idol("arisu", 12, Favorites("game", "strawberry")))`のように結果が`Result`に包まれて返ってきます。
@@ -146,7 +151,8 @@ json.decode(
 ## jasper
 
 :::message
-先述した通り現時点(6/16)では動作しませんが、かなり使いやすいライブラリなので紹介していきます。
+先述した通りjasperは現在動作しませんが、かなり使いやすいライブラリなので紹介していきます。
+なおコード例は最新版(2.0.1)の新しいAPIの形式で書いています。
 :::
 
 `gleam_json`を使った方法を見ると分かりますが、この方法は型を定義したりとかなり面倒です。
@@ -161,12 +167,12 @@ japserはgleam_jsonより直感的な記法でJSONから値を取り出せます
 
 ```rust
 import gleam/io
-import jasper.{parse_json, query_json, String, Root, Key, Index}
+import jasper.{String, Root, Key, Index}
 
 pub fn main() {
- let assert Ok(json) = parse_json("{ \"foo\": [1, true, \"hi\"] }")
- let assert Ok(String(str)) = query_json(json, Root |> Key("foo") |> Index(2))
- io.println(str)
+  let assert Ok(json) = jasper.parse("{ \"foo\": [1, true, \"hi\"] }")
+  let assert Ok(String(str)) = jasper.query(json, Root |> Key("foo") |> Index(2))
+  io.println(str)
 }
 ```
 [README](https://github.com/LilyRose2798/jasper)より引用。
@@ -185,7 +191,7 @@ pub fn main() {
 ```
 
 ```rust
-query_json(json, Root |> Key("favorites") |> Key("food"))
+jasper.query(json, Root |> Key("favorites") |> Key("food"))
 // => Ok("strawberry")
 ```
 
