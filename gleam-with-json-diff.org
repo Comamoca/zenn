@@ -1,0 +1,262 @@
+#+TITLE: 「GleamとJSON」現状との乖離調査
+#+DATE: 2026-09-02 (第5回検証)
+#+OPTIONS: toc:2 num:t
+
+対象:
+- 記事 =articles/gleam-with-json.md=
+
+* このドキュメントについて
+
+記事本体は変更せず、現行のGleamエコシステムとの乖離点を一覧化したもの。
+第2回検証では、著者が記事に反映した更新内容を実機(=gleam=コンパイラ + Erlang)で再検証した。
+「★」は実際に =gleam build= / =gleam run= / =gleam add= / Hex API で裏取りした項目。
+
+** 調査環境 (★実機検証)
+
+| 項目          | バージョン                                   |
+|---------------+-----------------------------------------------|
+| gleam         | 1.18.1                                         |
+| gleam_stdlib  | 1.0.5 (=gleam new= が既定で解決するバージョン) |
+| gleam_json    | 3.1.0                                           |
+| jasper        | 公開最新は2.0.1だが、通常のプロジェクトでは1.2.0が解決される (詳細は後述) |
+| pears         | 0.4.0 (jasper 1.2.0の依存。2024-07-16以降更新なし) |
+
+* 第1回検証の誤りの訂正【重要】
+
+** 訂正: 「jasperは動くようになっている」は誤りだった
+
+第1回検証時、jasperのhexdocsトップページ(=jasper.hexdocs.pm/=、最新バージョンのドキュメントを表示)
+だけを見て「v2.0.1で動くようになっている」と判断し、著者はこれを受けて記事に
+
+#+begin_quote
+2026/08/31 更新:
+jasperは現状新APIに更新され動くようになっています。
+#+end_quote
+
+という一文を追加した。★実機で =gleam add= / =gleam build= / Hex API を確認した結果、
+*これは誤りで、jasperは現在も通常のプロジェクトでは動かない*。
+
+*** 実測結果
+
+1. ★通常通り =gleam new= したプロジェクト(=gleam_stdlib = ">= 1.0.0 and < 2.0.0"=)で
+   =gleam add jasper= すると、*2.0.1ではなく1.2.0が解決される*。
+2. ★Hex APIで確認すると、原因はjasper自体のバージョン制約:
+
+   | jasperのバージョン | =gleam_stdlib= 要求範囲                  | 現行stdlib(1.0.5)と両立するか |
+   |--------------------+---------------------------------------------+--------------------------------|
+   | 2.0.1 (最新, 2025-09-04) | =>= 0.62.1 and < 1.0.0=                | ✗ (1.0未満に固定されており明らかに範囲更新漏れ) |
+   | 1.2.0 (2024-03-25)      | =~> 0.34 or ~> 1.0=                    | ○ (制約上は満たす)              |
+
+   ★実際に =jasper = "2.0.1"= を =gleam.toml= に固定すると:
+   #+begin_example
+   error: Dependency resolution failed
+   There's no compatible version of `gleam_stdlib`:
+     - You require jasper 2.0.1
+       - jasper requires gleam_stdlib >= 0.62.1 and < 1.0.0
+     - You require gleam_stdlib >= 1.0.0 and < 2.0.0
+   #+end_example
+
+3. ★では実際に解決される1.2.0は動くのか？ → *動かない*。
+   依存先の =pears 0.4.0=(2024-07-16以降更新なし)が =gleam/iterator= をimportしており、
+   このモジュールは現行stdlibには存在しない(=gleam/yielder=に改名の上で削除済み)。
+   #+begin_example
+   error: Unknown module
+     ┌─ .../pears/src/pears/input.gleam:4:1
+     │
+   4 │ import gleam/iterator
+     │ ^^^^^^^^^^^^^^^^^^^^^
+   No module has been found with the name `gleam/iterator`.
+   #+end_example
+
+*** 結論
+
+*jasperは現在、通常のプロジェクトでは =gleam add jasper= すらまともに使えない。*
+理由は記事が挙げていた「=list.at= 削除」ではなく、
+- 2.0.1系: パッケージのバージョン制約が1.0未満のstdlibに固定されたまま更新されていない(=jasper=側の不備)
+- 1.2.0系(実際に解決される方): 依存先=pears=が=gleam/iterator=依存のまま放置されている
+
+という2つの独立した理由による。★なお =gleam_stdlib= を手動で
+=">= 0.62.1 and < 1.0.0"= まで下げて =jasper = "2.0.1"= を明示指定すれば
+=jasper.parse=/=jasper.query= の新APIは実際に動作することを確認したが、
+これはプロジェクト全体を1.0未満の古いstdlibへ固定する必要がある非標準的な回避策であり、
+「素直に=gleam add jasper=すれば動く」状態では全くない。
+
+*** 記事への推奨対応
+
+- L29-30 の「jasperは現状新APIに更新され動くようになっています」は撤回し、
+  「現在も動かない」という趣旨に戻す(ただし理由は=list.at=ではなく上記の内容に更新)
+- L152-154 の =:::message= (「先述した通り現時点(6/16)では動作しませんが」)は
+  L29-30と矛盾したまま放置されている。日付表記(6/16)だけでも更新するか、
+  上の訂正と合わせて一本化する
+- jasperの新API例自体(=jasper.parse=/=jasper.query=)は「今は事実上使えないが、
+  参考として新しいバージョンの書き方はこうなっている」という位置づけで残すなら問題ない
+
+* 今回の更新で残っている問題
+
+** 【要修正】デコード節のコードに =import gleam/dynamic/decode= が抜けている
+
+L129-144 の =decode= 関数は =decode.field= / =decode.string= / =decode.success= を使うが、
+コードブロック内にimportが書かれていない(記事冒頭L44の =import gleam/json= のみ)。
+
+★実機で検証: importなしでコンパイルすると、=decode= というトップレベル関数名と
+=gleam/dynamic/decode= モジュールの名前が衝突するのではなく、
+*モジュールをimportしていないため =decode.field= が「自分自身(定義中の=decode=関数)のfieldアクセス」と
+解釈され* 以下のエラーになる。
+
+#+begin_example
+error: Unknown record field
+21 │     use favorites <- decode.field("favorites", favorites_decoder)
+   │                             ^^^^^ This field does not exist
+The value being accessed has this type:
+    fn(String) -> Result(a, json.DecodeError)
+#+end_example
+
+★ =import gleam/dynamic/decode= を先頭に追加すると *警告ゼロでコンパイル・実行でき*、
+出力も =Idol("arisu", 12, Favorites("game", "strawberry"))= と期待通りになることを確認済み。
+なお、トップレベル関数名 =decode= とモジュール別名 =decode= が衝突する心配はない
+(importさえあれば問題なく共存する)。
+
+*** 対応案
+
+コードブロックの先頭に以下を追加:
+
+#+begin_src gleam
+import gleam/dynamic/decode
+import gleam/json
+#+end_src
+
+** 【軽微】説明文がコードの変更に追従していない箇所
+
+| 箇所  | 現状の記述                                                                 | 問題                                                              |
+|-------+------------------------------------------------------------------------------+---------------------------------------------------------------------|
+| L112-114 =:::message= | 「一旦値をDynamicにして=gleam/dynamic=の関数を用いて型を判別していく方法」 | =gleam/dynamic/decode=への言及がなく、旧説明のまま残っている       |
+| L126  | 「次に、=json.decode=を使ってJSONをデコードします。」                        | 直後のコードは =json.parse= を使っているため文面と食い違う          |
+
+** 【軽微】jasperのimport文が新旧混在
+
+L168: =import jasper.{parse_json, query_json, String, Root, Key, Index}=
+
+呼び出し側(L171-172)は =jasper.parse=/=jasper.query= に更新済みだが、
+importは旧関数名 =parse_json=/=query_json= のままで、使われていない
+(★現行READMEの例は =import jasper.{String, Root, Key, Index}= のみ)。
+
+* 参考リンク
+
+- gleam_json (現行): https://hexdocs.pm/gleam_json/ (リダイレクト先 https://gleam-json.hexdocs.pm/gleam/json.html)
+- gleam_stdlib =gleam/dynamic=: https://hexdocs.pm/gleam_stdlib/gleam/dynamic.html
+- gleam_stdlib =gleam/dynamic/decode=: https://hexdocs.pm/gleam_stdlib/gleam/dynamic/decode.html
+- jasper (Hex API): https://hex.pm/api/packages/jasper
+- jasper 2.0.1 の依存要求 (Hex API): https://hex.pm/api/packages/jasper/releases/2.0.1
+- jasper 1.2.0 の依存要求 (Hex API): https://hex.pm/api/packages/jasper/releases/1.2.0
+- pears (Hex): https://hex.pm/packages/pears
+
+* 第3回検証: 前回指摘への対応状況
+
+著者が =import gleam/dynamic/decode= の追加、メッセージボックスの整理などを行ったが、
+★実機で再ビルドした結果、*新たなタイプミスにより修正が無効化されている*箇所と、
+*前回の指摘が未対応のまま*の箇所がある。
+
+** 【要修正・新規】L126 =import gleam/dynamic/decocde= はタイプミス
+
+正しくは =decode= だが =decocde= になっている(=c=と=d=が入れ替わっている)。
+
+★実機で確認: このタイプミスがあると =gleam/dynamic/decocde= というモジュールは存在しないため
+importが成立せず、結果として =decode.field(...)= は
+*(importされたモジュールではなく)定義中のトップレベル関数 =decode= 自身への
+フィールドアクセス*と解釈され、前回と全く同じ以下のエラーが再発する。
+
+#+begin_example
+error: Unknown record field
+22 │     use favorites <- decode.field("favorites", favorites_decoder)
+   │                             ^^^^^ This field does not exist
+The value being accessed has this type:
+    fn(String) -> Result(a, json.DecodeError)
+#+end_example
+
+*つまり今回の修正はタイプミス1文字によって実質的に無効化されている。*
+=decocde= → =decode= に直すだけで、前回確認済みの通り警告ゼロで動作する。
+
+** 【要修正・新規】jasperのコード例、importを減らしすぎて =Root=/=Key=/=Index=/=String= が未解決
+
+L167を =import jasper.{parse_json, query_json, String, Root, Key, Index}= から
+=import jasper= (裸のimport)に変更しているが、コード本体(L171, L172, L191)は
+=Root=/=Key=/=Index=/=String= を *修飾なしで* 使っている。
+
+=jasper.parse=/=jasper.query= のように呼び出し関数だけを修飾形にするなら、
+型/コンストラクタの =String=/=Root=/=Key=/=Index= は個別importが必要:
+
+#+begin_src gleam
+import jasper.{String, Root, Key, Index}
+#+end_src
+
+(もしくは =jasper.Root= のように全て修飾形で統一する)
+
+** 【未対応】L29-30 「jasperは現状新APIに更新され動くようになっています」
+
+第2回で指摘した内容(=gleam add jasper=は現行stdlibでは2.0.1ではなく1.2.0を解決し、
+その1.2.0は依存先=pears=の=gleam/iterator=依存で結局ビルドが通らない)が未反映のまま。
+この一文は引き続き事実と異なるため、撤回または訂正が必要。
+
+** 【未対応】L152 =:::message= が上の更新内容と矛盾したまま
+
+「先述した通り現時点(6/16)では動作しませんが」の一文が残っており、
+L29-30の「動くようになっています」と直接矛盾している。日付(6/16)も更新されていない。
+
+** 【未対応】L123 「次に、=json.decode=を使ってJSONをデコードします。」
+
+コードは =json.parse= を使っているため、依然として文面とコードが食い違っている。
+
+* 第4回検証: 第3回指摘への対応状況
+
+** 解決済み ★実機で再確認
+
+- L126 =import gleam/dynamic/decocde= のタイプミス → =import gleam/dynamic/decode= に修正済み。
+  ★実機で再ビルド・実行し、警告ゼロで =Ok(Idol("arisu", 12, Favorites("game", "strawberry")))=
+  が出力されることを確認した(デコード節はこれで完全に問題なし)。
+- jasperのコード例の =import jasper.{String, Root, Key, Index}= → 修正済み。
+  =Root=/=Key=/=Index=/=String= の未解決は解消した(構文としては正しい)。
+- L123 「次に、=json.parse=を使ってJSONをデコードします。」に修正済み。コードと一致した。
+
+** 未対応のまま残っている項目
+
+- L29-30 「jasperは現状新APIに更新され動くようになっています」
+  → 第2回・第3回で指摘した「=gleam add jasper=は現行stdlibでは1.2.0を解決し、
+  1.2.0は依存先=pears=の=gleam/iterator=依存でビルドが通らない(2.0.1は
+  stdlib制約により依存解決の時点で選択されない)」という実測結果が未反映。
+  引き続き事実と異なる。
+- L152 =:::message= 「先述した通り現時点(6/16)では動作しませんが」
+  → L29-30と矛盾したまま。日付(6/16)も未更新。
+
+*jasper節はコードの構文は正しくなったが、「動くようになった」という前提の文章2箇所は
+まだ訂正されていない。* デコード節は今回で解決済み。
+
+* 第5回検証: 第4回指摘への対応状況 (2026-09-02)
+
+第4回で未対応だったjasper関連の文章2箇所を、記事に直接反映した。
+★反映前に実機で再検証(=gleam new= → =gleam add jasper= → =gleam build=、
+および =jasper = "2.0.1"= 固定で =gleam deps download=)し、第2回の実測結果が
+変わらず再現することを確認した:
+
+- =gleam add jasper= → *jasper 1.2.0 + pears 0.4.0* が解決される(2.0.1は選ばれない)
+- =gleam build= → =pears= が =iterator.from_list= / =iterator.at= を使うが
+  =No module has been found with the name `iterator`= でビルド失敗
+  (=gleam/iterator= は現行stdlibでは =gleam/yielder= に改名・削除済み)
+- =jasper = "2.0.1"= を明示固定 → =There's no compatible version of `gleam_stdlib`=
+  で依存解決失敗(2.0.1は =gleam_stdlib >= 0.62.1 and < 1.0.0= を要求)
+
+** 解決済み
+
+- L29-31 「jasperは現状新APIに更新され動くようになっています」(第1回検証の誤り)
+  → 「2026/09/02 更新: jasperは現在も動かない状態です」と訂正。
+  理由として2.0.1のstdlib制約不備と、1.2.0の依存先=pears=の =gleam/iterator= 依存を記載。
+- L151-154 =:::message= 「先述した通り現時点(6/16)では動作しませんが」
+  → 古い日付(6/16)を削除し、上の訂正と矛盾しない文面に更新。
+  あわせて「コード例は最新版(2.0.1)の新しいAPIの形式」という位置づけを明記
+  (推奨対応の「参考として残す」方針に従った)。
+
+** 結論
+
+残存していた問題はすべて解決。
+- デコード節: 新API(=gleam/dynamic/decode= + =json.parse=)で実機動作確認済み(第4回)
+- jasper節: コード例は構文OK(実行にはstdlib < 1.0.0への固定が必要なため参考位置づけ)、
+  「動かない」前提の文章も実測と一致した状態に統一済み(第5回・今回)
