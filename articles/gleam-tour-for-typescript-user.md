@@ -6,37 +6,33 @@ topics: [gleam, typescript]
 published: true
 ---
 
-:::details スマホの人向け目次
-- [Erlangについて](#erlangについて)
-- [GleamとTypeScriptは何が違うのか](#gleamとtypescriptは何が違うのか)
-- [インストール方法](#インストール方法)
-- [GleamとJavaScript](#gleamとjavascript)
-- [実行方法](#実行方法)
-- [エントリポイント](#エントリポイント)
-- [標準出力](#標準出力)
-- [変数](#変数)
-- [定数](#定数)
-- [プリミティブ型](#プリミティブ型)
-- [コレクション型](#コレクション型)
-- [その他の型](#その他の型)
-- [型変換(キャスト)](#型変換(キャスト))
-- [カスタム型](#カスタム型)
-- [四則演算](#四則演算)
-- [比較](#比較)
-- [パターンマッチ](#パターンマッチ)
-- [例外処理](#例外処理)
-- [use](#use)
-- [関数](#関数)
-- [パイプライン](#パイプライン)
-- [関数キャプチャ](#関数キャプチャ)
-- [ジェネリクス](#ジェネリクス)
-- [モジュール](#モジュール)
-- [外部関数](#外部関数)
-- [パッケージ](#パッケージ)
-- [Gleamパッケージの探し方](#gleamパッケージの探し方)
-- [寄付について](#寄付について)
-- [参考文献](#参考文献)
-:::
+
+## 更新履歴
+Gleam 1.18.1 / gleam_stdlib 1.0.5 時点の情報に更新しました。
+
+2026/08/29 更新:
+- Zennがモバイル表示時の見出し一覧の表示に対応したため、見出し一覧を削除しました。
+- 標準出力の見出しをデバッグ出力へ変更しました。
+- `io.debug`がstdlib v0.61.0で削除されたため、サンプルコードを`echo`キーワードに置き換えました。
+- `gleam/iterator`がstdlibから削除されたため、`gleam_yielder`の`yielder`を案内するようにしました。
+- `bool.to_int`がstdlib v0.52.0で削除されたため、`case`で自前実装する例に差し替えました。
+- `import int`などのモジュールパスを`import gleam/int`に修正しました。
+
+2026/08/30 更新:
+- `gleam/otp/task`がgleam_otp v1.0.0-rc1で削除されたため、並列処理のサンプルコードを`gleam/erlang/process`を使った同等の実装に差し替えました。
+- サンプルコードのリポジトリを移設したため、リンク先を更新しました。
+
+2026/08/31 更新:
+- 記事中の全サンプルコードをGleam 1.18.1でコンパイル・実行して動作を確認し、通らなくなっていたものを修正しました。
+- コードブロックの言語指定を`rust`から`gleam`に統一しました。
+- `gleam.toml`のサンプルで`runtime`が効いていなかったため、`[javascript]`セクション配下へ移動しました。あわせて`gleam_stdlib`のバージョン指定を更新しました。
+- `gleam new`で生成されるプロジェクトの構成図と、`main`関数のシグネチャを現在のものに更新しました。
+- 外部関数の節を整理し、`@external`の直後には関数定義が続くことを明記しました。あわせてFFIのファイルは拡張子が`.js`でも動作する旨を補足しました。
+- リンク切れになっていたインストールページ・`gleam.toml`リファレンス・monadsリポジトリのURLを更新しました。
+- TypeScript側のサンプルコードの誤りを修正しました。
+- `rebar3`の誤記や実行結果のコメントなど、細かい誤りを修正しました。
+
+---
 
 最近v1に到達したGleamという静的型付けな関数型言語があります。
 
@@ -123,7 +119,7 @@ https://zenn.dev/comamoca/articles/interop-of-gleam-and-elixir
 
 ### OTP
 
-OTPはErlangに付属しているライブラリ郡です。
+OTPはErlangに付属しているライブラリ群です。
 
 https://www.erlang.org/doc/readme.html
 
@@ -137,39 +133,85 @@ https://www.erlang.org/doc/readme.html
 
 ### Erlangの並列性を体感してみる
 
-Erlangの並列性を感じるため、実際に動かしてみます。
-ここでは[`gleam_otp`](https://hexdocs.pm/gleam_otp/)という公式のOTPバインディングを使ってみます。
+:::message
+2026/08/30 更新:
+gleam/otp/taskは gleam_otp v1.0.0-rc1 にて削除されました。
+サンプルコードは同等の機能を持ったコードに差し替えてます。
+:::
 
+::: details 折り畳みに同等の機能を持つコードを記載します。
+
+```gleam:parallel_task
+import gleam/erlang/process.{type Subject}
+
+pub type Task(a) =
+  Subject(a)
+
+/// Spawn `work` on a new linked process and return a handle that can be
+/// awaited with `await` or `await_forever`.
+pub fn async(work: fn() -> a) -> Task(a) {
+  let subject = process.new_subject()
+  process.spawn(fn() { process.send(subject, work()) })
+  subject
+}
+
+/// Wait up to `timeout` milliseconds for the task's result.
+/// Panics if the result does not arrive in time.
+pub fn await(task: Task(a), timeout: Int) -> a {
+  let assert Ok(value) = process.receive(task, within: timeout)
+  value
+}
+
+/// Wait indefinitely for the task's result.
+pub fn await_forever(task: Task(a)) -> a {
+  process.new_selector()
+  |> process.select(task)
+  |> process.selector_receive_forever
+}
+```
+:::
+
+
+Erlangの並列性を感じるため、実際に動かしてみます。
 以下のコードはこちらで公開しています。
 
-https://github.com/comamoca/sandbox/tree/main/ex_gleam_parallel
+実行する前に`gleam_erlang`パッケージのインストールが必要です。
+`gleam add gleam_erlang`でパッケージをインストールしてください。
 
-```rust
+https://github.com/comamoca/sandbox-gleam/tree/main/ex_gleam_parallel
+
+```gleam
 import gleam/erlang/process
 import gleam/int
 import gleam/io
-import gleam/iterator
 import gleam/list
-import gleam/otp/task
 import gleam/string
+import parallel_task
 
+pub fn main() {
+  io.println("===== Not Parallel =====")
+  not_parallel()
 
-/// 並列に実行しない場合
+  io.println("===== Parallel =====")
+  parallel()
+}
+
+fn range(from: Int, to: Int) -> List(Int) {
+  int.range(from: from, to: to + 1, with: [], run: list.prepend)
+  |> list.reverse
+}
+
 fn not_parallel() {
-  iterator.range(0, 10)
-  |> iterator.map(fn(n) { sleep(n) })
-  |> iterator.to_list
+  range(1, 10)
+  |> list.map(fn(n) { sleep(n) })
 }
 
-/// 並列に実行する場合
 fn parallel() {
-  iterator.range(0, 10)
-  |> iterator.map(fn(n) { task.async(fn() { sleep(n) }) })
-  |> iterator.to_list
-  |> list.map(fn(t) { task.await_forever(t) })
+  range(1, 10)
+  |> list.map(fn(n) { parallel_task.async(fn() { sleep(n) }) })
+  |> list.map(fn(t) { parallel_task.await_forever(t) })
 }
 
-// Sleep処理。1秒処理を停止させる。
 fn sleep(n: Int) {
   io.println(string.concat(["[", int.to_string(n), "]", " Sleeping..."]))
   process.sleep(1000)
@@ -182,7 +224,7 @@ fn sleep(n: Int) {
 
 
 JavaScriptでは似たような処理をするために`Promise.all`を使います。
-ですが、Erlangの並列処理はこれと違い**task.asyncの時点で並列に動作するプロセスが生成されている**というのが大きな違いです。
+ですが、Erlangの並列処理はこれと違い**parallel_task.asyncの時点で並列に動作するプロセスが生成されている**というのが大きな違いです。
 
 
 ## GleamとTypeScriptは何が違うのか
@@ -212,9 +254,9 @@ Gleamを実行するためにはGleamコンパイラとそれぞれのターゲ�
 
 インストール方法は公式サイトに書かれているので割愛します。
 
-https://gleam.run/getting-started/installing/
+https://gleam.run/install/
 
-miseを使うとGleamコンパイラのみならず、Erlangやraber、Node.jsなどコンパイラや実行環境がまとめて手に入るのでオススメです。
+miseを使うとGleamコンパイラのみならず、Erlangやrebar3、Node.jsなどコンパイラや実行環境がまとめて手に入るのでオススメです。
 
 https://mise.jdx.dev/
 
@@ -225,7 +267,8 @@ GleamはES6に準拠したJavaScriptを出力します。
 
 Denoに関しては設定ファイル`gleam.toml`にて実行時権限の指定が可能です。
 
-https://gleam.run/writing-gleam/gleam-toml/
+https://gleam.run/documentation/gleam-toml-reference
+
 
 例えば実行にDenoを使い、`--allow-net`を指定する場合は以下のように書きます。
 
@@ -236,10 +279,12 @@ licences = ["MIT"]
 description = "Gleam bindings to..."
 
 target = "javascript"
-runtime = "deno"
 
 [dependencies]
-gleam_stdlib = ">= 0.18.0 and < 2.0.0"
+gleam_stdlib = ">= 1.0.0 and < 2.0.0"
+
+[javascript]
+runtime = "deno"
 
 [javascript.deno]
 allow_net = true
@@ -254,24 +299,28 @@ Erlangバックエンドを試したい方は[Codesandbox](https://codesandbox.i
 :::
 
 GleamコンパイラはRustで書かれたシングルバイナリとして配布されているので、コンパイラをダウンロードすればコードの変換は可能です。
-実行するためにはErlangターゲットの場合はErlangとraber3、JavaScriptターゲットの場合はNode.jsまたはDenoとBunが必要です。
+実行するためにはErlangターゲットの場合はErlangとrebar3、JavaScriptターゲットの場合はNode.jsまたはDenoとBunが必要です。
 
 `gleam new`コマンドで生成されるプロジェクトのディレクトリ構造は以下のようになっています。
 
 ```
 .
-├── gleam.toml
+├── .github
+│   └── workflows
+│       └── test.yml
+├── .gitignore
 ├── README.md
+├── gleam.toml
 ├── src
 │   └── sample.gleam <- `gleam run`するとこのファイルのmain関数が実行される。
 └── test
     └── sample_test.gleam
 ```
 
-```rust:src/sample.gleam
+```gleam:src/sample.gleam
 import gleam/io
 
-pub fn main() {
+pub fn main() -> Nil {
   io.println("Hello from sample!")
 }
 ```
@@ -308,28 +357,30 @@ Gleamでは`gleam run`コマンドが実行されると`src/`配下にある`プ
 console.log("Hello!")
 ```
 
-```rust:project_name.gleam
+```gleam:project_name.gleam
 import gleam/io
 
-pub fn main() {
+pub fn main() -> Nil {
   io.println("Hello!")
 }
 ```
 
-## 標準出力
+## デバッグ出力
 
 TypeScriptには`console.log`という関数があり、組込みで使えます。
-Gleamでは標準出力は`gleam/io`というライブラリで提供されてます。
 
-`gleam/io`ライブラリにある`io.debug`という関数は**あらゆる型を受け入れ標準出力する関数**で、デバッグする際非常に便利です。
-またこの関数は**入力された値をそのまま返す**という特性を持っているためパイプラインに容易に挿入できます。
+:::message
+2026/08/29 更新:
+io.debugはstdlib v0.61.0で削除されました。
+現在は`echo`キーワードを使用します。`echo`は`io.debug`と異なり出力の前に`echo`があるファイルと行番号を出力します。
+:::
 
-```rust
+```gleam
 let a = 1
 let b = 2
 
 a
-|> io.debug   // => 2
+|> echo   // => 1
 |> int.add(b)
 ```
 
@@ -337,10 +388,8 @@ a
 console.log(149)
 ```
 
-```rust
-import gleam/io
-
-io.debug(149)
+```gleam
+echo 149
 ```
 
 ## 変数
@@ -351,17 +400,17 @@ Gleamでは`let`キーワードで変数を束縛できます。
 Gleamでは型以外**大文字の使用が禁止**されているため、変数は基本的に小文字のスネークケースで表記されます。
 
 ```ts
-const name = "temari" // name is temari
-const name = "kotone" // name is kotone
+let name = "temari" // name is temari
+name = "kotone"     // name is kotone
 
 console.log(name) // "kotone"
 ```
 
-```rust
+```gleam
 let name = "temari" // name is temari
 let name = "kotone" // name is kotone
 
-io.debug(name) // "kotone"
+echo name // "kotone"
 ```
 
 ## 定数
@@ -370,13 +419,11 @@ io.debug(name) // "kotone"
 Gleamの`const`は**コンパイル時に確定する**ため、TypeScriptとは異なり`const`の右辺には関数呼び出しを含めることはできません。
 また、モジュールのトップレベルでしか宣言できません。
 
-```rust
-import gleam/io
-
+```gleam
 const name = "arisu"
 
 pub fn main() {
-  io.debug(name) // "arisu"
+  echo name // "arisu"
 }
 ```
 
@@ -407,7 +454,7 @@ let kiremeki = `
 ```
 
 
-```rust
+```gleam
 let name = "arisu"
 
 let kiremeki = "
@@ -415,7 +462,7 @@ let kiremeki = "
 早すぎるも遅すぎるもないから 自分らしい夢を！
 "
 
-io.println("name is" <> name)
+io.println("name is " <> name)
 ```
 
 TypeScriptでよく使われるテンプレートリテラルは**Gleamには存在しません**。
@@ -427,13 +474,13 @@ const name = "hifumi"
 console.log(`${name} daisuki`)
 ```
 
-```rust
+```gleam
 import gleam/string
 
 let name = "hifumi"
-let tmpl = [name, "daisuki"]
+let tmpl = [name, " ", "daisuki"]
 
-string.concat(tmpl)
+string.concat(tmpl) // => "hifumi daisuki"
 ```
 
 ### Int
@@ -446,7 +493,7 @@ const u = 149
 const n = -3
 ```
 
-```rust
+```gleam
 let u = 149
 let n = -3
 ```
@@ -462,19 +509,24 @@ let n = -3
 
 ### List
 
+:::message
+2026/08/29 更新:
+stdlib v0.44.0 にてiteratorが非推奨となり、v0.50.0にてyielderパッケージへと移行しました。
+:::
+
 順序付けされた値が格納される型です。全ての要素が同じ型でないといけません。
 
 また単方向リストで作られており、末尾から要素を追加したり削除したりする処理が非常に非効率な特徴があります。
 
 インデックスに直接アクセスするような処理は非常に非効率なため推奨されておらず、Gleam標準ライブラリv0.38.0からListのインデックスにアクセスする関数`list.at`が削除されています。
-そのようなケースでは[iterator](https://hexdocs.pm/gleam_stdlib/gleam/iterator.html)の方が向いてるでしょう。
+そのようなケースでは[yielder](https://hexdocs.pm/gleam_yielder/gleam/yielder.html)の方が向いてるでしょう。
 
 ```ts
 const even = [2, 4, 6, 8, 10]
 const words = ["hello", "world"]
 ```
 
-```rust
+```gleam
 let even = [2, 4, 6, 8, 10]
 let words = ["hello", "world"]
 ```
@@ -488,14 +540,14 @@ let words = ["hello", "world"]
 const arisu: [string, number] = ["arisu", 12] 
 ```
 
-```rust
+```gleam
 let arisu: #(String, Int) = #("arisu", 12)
 ```
 
 ### Dict
 
 Key Value形式で値をまとめて扱えます。
-それぞれの要素の型は全て同じである必要があります。
+Key同士、Value同士の型は全て同じである必要があります。
 
 また、Dict型はタプルのリストから作るケースが多いです。
 その際は`dict.from_list`関数を使います。
@@ -504,11 +556,11 @@ Key Value形式で値をまとめて扱えます。
 const arisu = {name: "arisu", age: 12}
 ```
 
-```rust
+```gleam
 let arisu = dict.from_list([#("name", "arisu"), #("age", "12")])
 ```
 
-```rust
+```gleam
 let arisu = dict.from_list([#("name", "arisu"), #("age", 12)]) // => `12`はInt型なのでコンパイルエラーになる。
 ```
 
@@ -528,7 +580,7 @@ Gleamは**全ての関数が値を返す必要がある**ため、返す値が�
 console.log("Hello") // -> undefined
 ```
 
-```rust
+```gleam
 io.println("Hello") // -> Nil
 ```
 
@@ -552,7 +604,7 @@ iseven(2) // t { ok: true, err: false, val: 2 }
 iseven(5) // t { ok: false, err: true, val: "Not even.", _stack: "..." }
 ```
 
-```rust
+```gleam
 fn iseven(n: Int) -> Result(Int, String) {
   case n % 2 {
     0 -> Ok(n)
@@ -575,8 +627,8 @@ Gleamは型変換が言語仕様として存在しないので、標準ライブ
 String(149) // "149"
 ```
 
-```rust
-import int
+```gleam
+import gleam/int
 
 int.to_string(149) // => "149"
 ```
@@ -584,12 +636,12 @@ int.to_string(149) // => "149"
 ### String -> Int
 
 ```ts
-Number(149)     // => "149"
+Number("149")     // => 149
 Number("arisu") // => NaN
 ```
 
-```rust
-import int
+```gleam
+import gleam/int
 
 int.parse("149") // => Ok(149)
 int.parse("arisu") // => Error(Nil)
@@ -597,8 +649,8 @@ int.parse("arisu") // => Error(Nil)
 
 ### String -> Float
 
-```rust
-import float
+```gleam
+import gleam/float
 
 float.parse("14.9") // => Ok(14.9)
 float.parse("arisu") // => Error(Nil)
@@ -606,16 +658,16 @@ float.parse("arisu") // => Error(Nil)
 
 ### Float -> Int
 
-```rust
-import float
+```gleam
+import gleam/float
 
 float.round(14.9) // => 15
 ```
 
 ### Float -> String
 
-```rust
-import float
+```gleam
+import gleam/float
 
 float.to_string(14.9) // => "14.9"
 ```
@@ -624,28 +676,36 @@ float.to_string(14.9) // => "14.9"
 
 ```ts
 String(true) // => "true"
-String(false) // => "true"
+String(false) // => "false"
 ```
 
-```rust
-import bool
+```gleam
+import gleam/bool
 
-bool.to_string(True) // => "True"
-bool.to_string(Bool) // => "Bool"
+bool.to_string(True)   // => "True"
+bool.to_string(False)  // => "False"
 ```
 
 ### Bool -> Int
 
+:::message
+2026/08/29 更新:
+`bool.to_int`はstdlib v0.52.0 で削除されました。
+今後はcaseを用いて自身で変換を行う必要があります。
+:::
+
 ```ts
-Number(true)
-Number(false)
+Number(true)   // => 1
+Number(false)  // => 0
 ```
 
-```rust
-import bool
-
-bool.to_int(True)  // => 1
-bool.to_int(False) // => 0
+```gleam
+pub fn bool_to_int(val: Bool) -> Int {
+  case val {
+    True -> 1
+    False -> 0
+  }
+}
 ```
 
 ## カスタム型
@@ -660,7 +720,7 @@ Gleamの型定義はTypeScriptと違って、型の中にバリアントを含�
 このコンストラクタさえあればどこでも型の実体を生成できます。
 ですが、プリミティブ型に何らかの制約を課している型(e.g. メールアドレスを定義した型など)を作りたい場合などはコンストラクタを自分で定義したくなるケースがあります。そのような場合に使えるのが`opaque`です。
 
-`opeque`は不透明型と言って、**型自体は公開されているものの、そのバリアントを自ら呼び出せないよう制限されている型**を指します。
+`opaque`は不透明型と言って、**型自体は公開されているものの、そのバリアントを自ら呼び出せないよう制限されている型**を指します。
 
 詳しくは以下の記事で解説しています。
 
@@ -684,7 +744,7 @@ interface Idol {
 }
 ```
 
-```rust
+```gleam
 type Idol {
   Idol(name: String, age: Int)
 }
@@ -694,7 +754,7 @@ type Idol {
 const idol: Idol = {name: "arisu", age: 12}
 ```
 
-```rust
+```gleam
 let idol: Idol = Idol("arisu", 12) // バリアント名で型の実体を生成している。
 idol.name // => "arisu"
 idol.age  // => 12
@@ -703,28 +763,30 @@ idol.age  // => 12
 カスタム型は`case`にてパターンマッチを行えます。
 これを使うことで状態による条件分岐をスッキリと記述できます。
 
-```rust
+```gleam
+import gleam/io
+import gleam/int
+
+
 pub type State {
  Continue
  Shutdown
  State(val: Int)
 }
 
-let state = State(149)
-
-case state {
-  State(val) -> io.println("state: " <> int.to_string(val))
-  Continue -> io.println("Continue")
-  Shutdown -> io.println("Continue")
+fn describe(state: State) -> String {
+  case state {
+    State(val) -> "state: " <> int.to_string(val)
+    Continue -> "Continue"
+    Shutdown -> "Shutdown"
+  }
 }
 
-let state = Continue
-
-case state {
-  State(val) -> io.println("state: " <> int.to_string(val))
-  Continue -> io.println("Continue")
-  Shutdown -> io.println("Continue")
+pub fn main() {
+  io.println(describe(State(149)))
+  io.println(describe(Continue))
 }
+
 ```
 
 
@@ -739,6 +801,8 @@ Gleamは他の言語と異なり**ゼロ除算で0を返します**。
 :::details なぜGleamは0を返すことを選んだのか
 
 Gleam 0.13のリリースノートの**Type safe division**の項目にはこのように書かれています。
+なお、引用中の`assert`キーワードは当時の構文です。現在は`let assert`構文へ統一されています。
+本記事では一貫して`let assert`構文を用います。
 
 https://gleam.run/news/gleam-v0.13-released
 
@@ -756,7 +820,7 @@ https://gleam.run/news/gleam-v0.13-released
 > IEEE754に準拠するJavaScriptなどの言語はゼロで除算すると正または負の無限値を返します。
 > これは多くのプログラマーにとって馴染みのある挙動であり、Gleamの「暗黙的にクラッシュしない」という目標によく適合します。
 
-> 残念ながら、Erlang仮想にはInfinity値がないためGleamはこれを実装する必要があります。
+> 残念ながら、Erlang仮想マシンにはInfinity値がないためGleamはこれを実装する必要があります。
 > これにより、ErlangとElixirの相互運用性で問題が発生する可能性があります。
 > Gleamの整数型はこの特別なInfinity値である可能性があるため、Erlang関数に安全に渡すことができなくなりクラッシュが発生する可能性があります。
 > ErlangまたはElixirからGleamコードを呼び出すときにも同じ問題が発生し、その結果ErlangまたはElixirアプリケーションにGleamライブラリを追加する魅力が低下します。
@@ -853,16 +917,6 @@ if (n == 100) {
 }
 ```
 
-```rust
-case 100 {
-  100 -> io.println("Number is 100") 
-  200 -> io.println("Number is 200")
-  300 -> io.println("Number is 300")
-} // => 全てのパターンが記述されていないためコンパイルエラーになる。
-```
-
-逆に、パターンが網羅されていればコンパイルが通ります。
-
 ```ts
 const n = 100
 
@@ -873,12 +927,22 @@ if (n == 100) {
 }
 ```
 
+逆に、パターンが網羅されていればコンパイルが通ります。
+
+```gleam
+case 100 {
+  100 -> io.println("Number is 100")
+  200 -> io.println("Number is 200")
+  300 -> io.println("Number is 300")
+} // => 全てのパターンが記述されていないためコンパイルエラーになる。
+```
+
 また、パターンマッチの一部に変数を置いてマッチした値を使えます。
 
-```rust
+```gleam
 case 100 {
-  100 -> io.debug(100)
-  number -> io.debug(number * 2)
+  100 -> echo 100
+  number -> echo number * 2
 } // => 全てのパターンが網羅されているためコンパイルできる
 ```
 
@@ -898,10 +962,10 @@ if (n == 100) {
 
 これは左辺に変数を割り当てている場合でも同じです。
 
-```rust
+```gleam
 case 100 {
-  100 -> io.debug("Number is 100")  // String
-  number -> io.debug(number * 2)    // Int
+  100 -> echo "Number is 100"  // String
+  number -> echo number * 2    // Int
 } // => 右辺の戻り値の型が一致しないためコンパイルエラーになる。
 ```
 
@@ -928,14 +992,14 @@ if (n == 100) {
 }
 ```
 
-```rust
+```gleam
 case 100 {
   100 -> io.println("Number is 100")
   _ -> io.println("Number is not 100")
 } // => 全てのパターンが記述されているためコンパイルできる
 ```
 
-```rust
+```gleam
 case ["user", "arisu"] {
   ["user", name] -> io.println("username is " <> name)
   _ -> io.println("username is not found.")
@@ -947,7 +1011,7 @@ case ["user", "arisu"] {
 Gleamではエラーを`Result`という型で表現します。
 `Result`は正常な場合の`Ok`とエラーの`Error`の2つになりえます。
 
-```rust
+```gleam
 fn iseven(n: Int) -> Result(Int, String) {
   case n % 2 {
     0 -> Ok(n)
@@ -962,7 +1026,7 @@ fn iseven(n: Int) -> Result(Int, String) {
 
 最も簡単に値を取り出せます。値が`Error`だった場合は実行時エラーが発生します。
 
-```rust
+```gleam
 let assert Ok(n) = iseven(8)
 ```
 
@@ -971,9 +1035,9 @@ let assert Ok(n) = iseven(8)
 一番オーソドックスな方法です。
 やや冗長になりやすい所があります。
 
-```rust
+```gleam
 case iseven(8) {
-  Ok(n) -> io.println(int.to_string(n) <> "is even.") // => "8 is even."
+  Ok(n) -> io.println(int.to_string(n) <> " is even.") // => "8 is even."
   Error(err) -> io.println(err) // => "Not even."
 }
 ```
@@ -985,10 +1049,10 @@ case iseven(8) {
 
 また内部で`case`を使っているため、`case`のように戻り値の型は同じでなくてはなりません。
 
-```rust
+```gleam
 import gleam/result
 
-result.try(iseven(5), fn (n) { Ok(int.to_string(n) <> "is even.") })
+result.try(iseven(5), fn (n) { Ok(int.to_string(n) <> " is even.") })
 
 result.try(iseven(5), fn (n) { 
   result.try(iseven(n / 3), fn (n) {
@@ -1002,7 +1066,7 @@ result.try(iseven(5), fn (n) {
 コールバックを展開して記述できる構文糖です。
 上記の`result.try`を用いたサンプルコードは少し読みづらいですが、この構文を用いるとスッキリと記述できます。
 
-```rust
+```gleam
 use n <- result.try(iseven(5))
 use n <- result.try(iseven(n / 3))
 
@@ -1034,23 +1098,26 @@ Gleamにおける型注釈はオプションなので、付けなくてもコン
 function fizzbuzz(n: number): string {
   const mod = n % 15
   if (mod == 0) {
-    console.log("FizzBuzz")
+    return "FizzBuzz"
   } else if (mod  == 3 || mod == 6 || mod  == 9 || mod == 12) {
-    console.log("Fizz")
+    return "Fizz"
   } else if (mod == 5 || mod == 10) {
-    console.log("Buzz")
+    return "Buzz"
+  } else {
+    return String(n)
   }
 }
 ```
 
-```rust
-fn fizzbuzz(n: Int) -> String {
-  case n % 15 {
-    0 -> "FizzBuzz"
-    3 | 6 | 9 | 12 -> "Fizz"
-    5 | 10 -> "Buzz"
+```gleam
+pub fn fizzbuzz(n: Int) -> String {
+  case n % 3, n % 5 {
+    0, 0 -> "FizzBuzz"
+    0, _ -> "Fizz"
+    _, 0 -> "Buzz"
+    _, _ -> int.to_string(n)
   }
- }
+}
 ```
 
 ### ラムダ関数(無名関数)
@@ -1059,12 +1126,12 @@ fn fizzbuzz(n: Int) -> String {
 **Gleamの関数は一級関数**なので変数に束縛可能です。
 
 ```ts
-const greet = (name: string => `Hello! ${name}!`)
+const greet = (name: string) => `Hello! ${name}!`
 greet("arisu") // => Hello! arisu!
 ```
 
-```rust
-let greet = fn (name) {"Hello! " <> name <> "!"}
+```gleam
+let greet = fn (name) { "Hello! " <> name <> "!" }
 greet("arisu") // => Hello! arisu!
 ```
 
@@ -1076,14 +1143,14 @@ GleamではJavaScriptでおなじみの即時関数も使えます。
 (()=> {console.log("Hello!")})()
 ```
 
-```rust
+```gleam
 fn () {io.println("Hello!")}()
 ```
 
 ですが、このようなケースではブロック構文を使った方が良いでしょう。
 ブロック構文では複数の式をまとめて実行しその返り値を変数に束縛できます。
 
-```rust
+```gleam
 let _ = {
   io.println("Hello!")
 }
@@ -1103,7 +1170,7 @@ const tmp = add(1, 2)
 const n = mul(tmp, 3)
 ```
 
-```rust
+```gleam
 let add = fn (a, b) {a + b}
 let mul = fn (a, b) {a * b}
 
@@ -1124,9 +1191,9 @@ add1(2) // => 3
 
 引数を`_`にして値を与えないことで関数がキャプチャされ、新たな関数`add1`が束縛されます。
 
-```rust
+```gleam
 let add = fn (a: Int, b: Int) { a + b }
-let add1 = add(a, _)
+let add1 = add(_, 1)
 
 add1(2) // => 3
 ```
@@ -1141,7 +1208,7 @@ function chooseRandomly<T>(a: T, b: T): T {
 }
 ```
 
-```rust
+```gleam
 import gleam/int
 import gleam/bool
 
@@ -1154,7 +1221,7 @@ fn choose_randomly(a: t, b: t) -> t {
 Gleamの型変数はTypeScriptと異なり、**命名規則さえ守っていればどんな名前でもコンパイルが通ります**。
 例えば以下のような型変数も可能です。
 
-```rust
+```gleam
 import gleam/int
 import gleam/bool
 
@@ -1181,13 +1248,13 @@ fn choose_randomly(a: hifumi_daisuki, b: hifumi_daisuki) -> hifumi_daisuki {
     └── sample_test.gleam
 ```
 
-```rust:sub.gleam
+```gleam:sub.gleam
 pub fn greet(name) {
   "Hello! " <> name <> "!"
 }
 ```
 
-```rust:sample.gleam
+```gleam:sample.gleam
 import gleam/io
 import sub
 
@@ -1203,33 +1270,33 @@ GleamはErlangとJavaScriptに変換されて実行されます。
 
 関数定義の上の行に`@external`から始まるアノテーションを付けると、Gleam外部の関数を呼び出せます。
 
-書式は以下の通りです。
-
+`@external`は関数定義に付けるアノテーションなので、直後には必ず関数の定義が続きます。
 
 JavaScriptターゲットの場合はこのように呼び出します。
-デフォルトの実行先がNode.jsなため、ファイル名の拡張子は`.mjs`にする必要があります。
+FFIのjsは拡張子が`.js`でも実行できます。
+しかし、デフォルトの実行先がNode.jsなため、特別な理由がなければFFIがESMとして認識されるようファイル名の拡張子は`.mjs`にするのをオススメします。
 
-```rust
+```text
 @external(ターゲット, "ファイル名", "呼び出す関数名")
 ```
 
-```rust
+```gleam
 @external(javascript, "./ffi.mjs", "now") // ffi.mjsのnow関数を呼び出す
+pub fn now() -> Float
 ```
 
 Erlangターゲットの場合はこのように呼び出します。
 
-```rust
+```text
 @external(ターゲット, "モジュール名", "呼び出す関数名")
 ```
 
-```rust
+```gleam
 @external(erlang, "calendar", "local_time") // calendar:local_time/0を呼び出す
+pub fn local_time() -> #(#(Int, Int, Int), #(Int, Int, Int))
 ```
 
-```rust
-@external(javascript, "./ffi.mjs", "now")
-```
+JavaScriptターゲットでFFIを使う場合、呼び出すファイルは以下のように`src/`配下に置きます。
 
 ```
 .
@@ -1255,7 +1322,8 @@ Gleamのパッケージは[hex.pm](https://hex.pm/)という、Erlang VM上で�
 ```sh
 gleam add gleam_community_ansi
 ```
-```rust
+
+```gleam
 import gleam/io
 import gleam_community/ansi
 
@@ -1288,7 +1356,7 @@ https://discord.gg/Fm8Pwmy
 ## 寄付について
 
 Gleamのブログやリポジトリを見ると必ず最後にスポンサーの名前が載っています。
-[GitHub sponsers](https://github.com/sponsors/lpil)経由でGleamを開発しているLouis Pilfoldさんへ寄付ができるので、もしGleamのことを気に入ったのならぜひ寄付してみてください。
+[GitHub sponsors](https://github.com/sponsors/lpil)経由でGleamを開発しているLouis Pilfoldさんへ寄付ができるので、もしGleamのことを気に入ったのならぜひ寄付してみてください。
 
 ちなみに毎月寄付をしていると先述したスポンサー一覧に名前が載ります。
 自分も寄付しているのでぜひ探してみてください。
@@ -1303,6 +1371,5 @@ https://developer.mozilla.org/ja/docs/Web
 
 https://elixirschool.com/ja
 
-[^1]: 個人的には[monads](https://github.com/thames-technology/monads)の方が好みです。[ブログ記事](https://comamoca.dev/blog/2023-08-24-monads/)
+[^1]: 個人的には[monads](https://github.com/slavovojacek/monads)の方が好みです。[ブログ記事](https://comamoca.dev/blog/2023-08-24-monads/)
 [^2]: ちなみにGleam v1.2.0にて型とバリアントを間違えている旨のコンパイルエラーが出るようになりました。結構間違えやすい箇所だと感じていたので嬉しい変更です。
-[^3]: 
