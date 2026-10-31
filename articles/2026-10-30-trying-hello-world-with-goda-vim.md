@@ -9,7 +9,7 @@ published: true
 トリックオアトリート！
 お菓子をくれなきゃあなたを今後Vim/Neovim/Emacsしか使えない体にします。こまもかです。
 
-今週から一段と冷えこんできたこのころですが、こんな寒い季節は家に籠ってdotfilesを整備するのが相場と決まっています。
+今週から一段と冷えこんできたこの頃ですが、こんな寒い季節は家に籠ってdotfilesを整備するのが相場と決まっています。
 という訳で、Shougoさんの新作[goda.vim](https://github.com/Shougo/goda.vim)を使ってHello, worldする方法を解説していきます。
 
 goda.vimを簡単に解説すると、GoでVim pluginを書けるようにするというものです。
