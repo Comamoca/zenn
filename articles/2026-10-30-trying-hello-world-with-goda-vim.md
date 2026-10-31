@@ -265,7 +265,7 @@ Nixを使うと、Goのビルドも含めてVimプラグインをまとめてビ
 nix run github:comamoca/goda-hello
 ```
 
-denopsではDenoを使う都合上、依存関係を実行時に取得するのでNixによるパッケージングがかなり厳しかったのですが、godaではGoを用いるのでNixでのパッケージングがやりや少なっています。
+denopsではDenoを使う都合上、依存関係を実行時に取得するのでNixによるパッケージングがかなり厳しかったのですが、godaではGoを用いるのでNixでのパッケージングがやりやすくなっています。
 
 ## まとめ
 今回はGoでVim pluginを開発できるgoda.vimを解説しました。
